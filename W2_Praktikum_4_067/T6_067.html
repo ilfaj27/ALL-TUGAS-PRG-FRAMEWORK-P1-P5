@@ -1,17 +1,18 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Transaksi</title>
 
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
         body {
             background-color: #f8f9fa;
-            font-family: Tahoma, sans-serif;
+            font-family: 'Tahoma', sans-serif;
             padding: 20px;
         }
 
@@ -48,16 +49,12 @@
 </head>
 
 <body>
-
     <div class="container">
         <div class="table-container">
             <h1>Daftar Transaksi - P7_067</h1>
+            <button id="addDataBtn" class="btn btn-primary mb-3">+ Add Data</button>
 
-            <button id="addDataBtn" class="btn btn-primary mb-3">
-                + Add Data
-            </button>
-
-            <table id="transaction-table" class="table table-bordered">
+            <table id="transaksi-table" class="table table-bordered table-hover">
                 <thead>
                     <tr>
                         <th>ID Transaksi</th>
@@ -69,481 +66,179 @@
                         <th>Aksi</th>
                     </tr>
                 </thead>
-
                 <tbody>
                     <tr>
-                        <td colspan="7" class="text-center">
-                            Data transaksi akan muncul di sini...
-                        </td>
+                        <td colspan="7" class="text-center">Data transaksi akan muncul di sini...</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
+        <!-- Form tambah transaksi -->
         <div class="form-container" id="formContainer">
             <h3 id="formTitle">Tambah Transaksi Baru</h3>
-
-            <form id="transactionForm">
-
+            <form id="addTransaksiForm">
                 <div class="mb-3">
-                    <label for="idProduk" class="form-label">
-                        Produk
-                    </label>
-
-                    <select class="form-select" id="idProduk" required>
-                        <option value="">Pilih Produk</option>
+                    <label for="idProduk" class="form-label">Produk</label>
+                    <select class="form-control" id="idProduk" required>
+                        <option value="">Memuat produk...</option>
                     </select>
                 </div>
-
                 <div class="mb-3">
-                    <label for="hargaJual" class="form-label">
-                        Harga Jual
-                    </label>
-
-                    <input
-                        type="text"
-                        class="form-control"
-                        id="hargaJual"
-                        readonly
-                    >
+                    <label for="jumlah" class="form-label">Jumlah</label>
+                    <input type="number" class="form-control" id="jumlah" min="1" required>
                 </div>
-
-                <div class="mb-3">
-                    <label for="jumlah" class="form-label">
-                        Jumlah
-                    </label>
-
-                    <input
-                        type="number"
-                        class="form-control"
-                        id="jumlah"
-                        min="1"
-                        required
-                    >
-                </div>
-
-                <div class="mb-3">
-                    <label for="totalHarga" class="form-label">
-                        Total Harga
-                    </label>
-
-                    <input
-                        type="text"
-                        class="form-control"
-                        id="totalHarga"
-                        readonly
-                    >
-                </div>
-
-                <button
-                    type="submit"
-                    class="btn btn-success"
-                    id="submitBtn">
-                    Submit
-                </button>
-
-                <button
-                    type="button"
-                    id="cancelBtn"
-                    class="btn btn-secondary">
-                    Cancel
-                </button>
-
+                <button type="submit" class="btn btn-success" id="submitBtn">Submit</button>
+                <button type="button" id="cancelBtn" class="btn btn-secondary">Cancel</button>
             </form>
         </div>
     </div>
 
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        const productUrl =
-            'https://api.melangkah.my.id/produk/read.php';
+        const url = 'https://api.melangkah.my.id/transaksi/read.php';
+        const createUrl = 'https://api.melangkah.my.id/transaksi/create.php';
+        const updateUrl = 'https://api.melangkah.my.id/transaksi/update.php';
+        const produkUrl = 'https://api.melangkah.my.id/produk/read.php';
 
-        const transactionUrl =
-            'https://api.roniprsty.com/transaksi/read.php';
-
-        const createUrl =
-            'https://api.roniprsty.com/transaksi/create.php';
-
-        const updateUrl =
-            'https://api.roniprsty.com/transaksi/update.php';
-
-        let products = [];
-
-        async function getProducts() {
-            try {
-                const response = await fetch(productUrl);
-
-                if (!response.ok) {
-                    throw new Error(
-                        `HTTP error! status: ${response.status}`
-                    );
-                }
-
-                products = await response.json();
-
-                const select = document.getElementById('idProduk');
-
-                select.innerHTML =
-                    '<option value="">Pilih Produk</option>';
-
-                products.forEach(product => {
-                    const option = document.createElement('option');
-
-                    option.value = product.id;
-
-                    option.textContent =
-                        `${product.id} - ${product.nama_produk} - Rp ${formatRupiah(product.harga_jual)}`;
-
-                    select.appendChild(option);
-                });
-
-            } catch (error) {
-                console.error(
-                    'Gagal mengambil data produk:',
-                    error
-                );
-
-                alert('Gagal mengambil data produk.');
-            }
+        // Format angka ke Rupiah (tanpa desimal berlebih)
+        function formatRupiah(angka) {
+            return 'Rp' + Number(angka).toLocaleString('id-ID', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
         }
 
-        async function getTransactions() {
+        // ===== READ =====
+        async function getTransaksi() {
+            const tableBody = document.querySelector('#transaksi-table tbody');
             try {
-                const response = await fetch(transactionUrl);
+                let response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                let data = await response.json();
 
-                if (!response.ok) {
-                    throw new Error(
-                        `HTTP error! status: ${response.status}`
-                    );
+                // Jaga-jaga jika API mengembalikan satu objek, bukan array
+                if (!Array.isArray(data)) data = [data];
+
+                tableBody.innerHTML = ''; // Kosongkan isi tabel
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Belum ada transaksi.</td></tr>';
+                    return;
                 }
 
-                const transactions = await response.json();
-
-                const tableBody =
-                    document.querySelector(
-                        '#transaction-table tbody'
-                    );
-
-                tableBody.innerHTML = '';
-
-                if (!transactions.length) {
-                    tableBody.innerHTML = `
+                data.forEach(trx => {
+                    const selesai = trx.status_transaksi === 'Selesai';
+                    let row = `
                         <tr>
-                            <td colspan="7" class="text-center">
-                                Belum ada data transaksi.
+                            <td>${trx.id_transaksi}</td>
+                            <td>${trx.tanggal_transaksi}</td>
+                            <td>${trx.id_produk}</td>
+                            <td>${trx.jumlah}</td>
+                            <td>${formatRupiah(trx.total_harga)}</td>
+                            <td>${trx.status_transaksi}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm"
+                                    onclick="updateTransaksi(${trx.id_transaksi})"
+                                    ${selesai ? 'disabled' : ''}>Selesaikan</button>
                             </td>
-                        </tr>
-                    `;
-
-                    return;
-                }
-
-                transactions.forEach(transaction => {
-
-                    const row = document.createElement('tr');
-
-                    row.innerHTML = `
-                        <td>${transaction.id_transaksi}</td>
-                        <td>${transaction.tanggal_transaksi}</td>
-                        <td>${transaction.id_produk}</td>
-                        <td>${transaction.jumlah}</td>
-                        <td>Rp ${formatRupiah(transaction.total_harga)}</td>
-                        <td>${transaction.status_transaksi}</td>
-                        <td>
-                            <button
-                                class="btn btn-warning btn-sm"
-                                onclick="updateTransaction(${transaction.id_transaksi})">
-                                Edit
-                            </button>
-                        </td>
-                    `;
-
-                    tableBody.appendChild(row);
+                        </tr>`;
+                    tableBody.innerHTML += row;
                 });
-
             } catch (error) {
-                console.error(
-                    'Gagal mengambil data transaksi:',
-                    error
-                );
-
-                document.querySelector(
-                    '#transaction-table tbody'
-                ).innerHTML = `
-                    <tr>
-                        <td colspan="7" class="text-center">
-                            Tidak dapat mengambil data transaksi.
-                        </td>
-                    </tr>
-                `;
+                console.error("Gagal mengambil data transaksi:", error);
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Tidak dapat mengambil data transaksi.</td></tr>';
             }
         }
 
-        function formatRupiah(value) {
-            return Number(value).toLocaleString('id-ID');
+        // ===== Isi dropdown produk dari API produk =====
+        async function loadProdukOptions() {
+            const select = document.getElementById('idProduk');
+            try {
+                let response = await fetch(produkUrl);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                let produk = await response.json();
+                select.innerHTML = '<option value="">-- Pilih produk --</option>';
+                produk.forEach(p => {
+                    select.innerHTML += `<option value="${p.id}">${p.id} - ${p.nama_produk}</option>`;
+                });
+            } catch (error) {
+                console.error("Gagal memuat produk:", error);
+                select.innerHTML = '<option value="">Gagal memuat produk</option>';
+            }
         }
 
-        document
-            .getElementById('idProduk')
-            .addEventListener('change', function () {
+        // ===== Tampil / sembunyikan form =====
+        document.getElementById('addDataBtn').addEventListener('click', function () {
+            document.getElementById('addTransaksiForm').reset();
+            document.getElementById('formContainer').style.display = 'block';
+        });
 
-                const idProduk = this.value;
+        document.getElementById('cancelBtn').addEventListener('click', function () {
+            document.getElementById('formContainer').style.display = 'none';
+        });
 
-                const product = products.find(
-                    p => p.id == idProduk
-                );
+        // ===== CREATE =====
+        document.getElementById('addTransaksiForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
 
-                if (product) {
-
-                    const hargaJual =
-                        parseFloat(product.harga_jual);
-
-                    document.getElementById(
-                        'hargaJual'
-                    ).value =
-                        'Rp ' + formatRupiah(hargaJual);
-
-                    hitungTotal();
-
-                } else {
-
-                    document.getElementById(
-                        'hargaJual'
-                    ).value = '';
-
-                    document.getElementById(
-                        'totalHarga'
-                    ).value = '';
-                }
-            });
-
-        document
-            .getElementById('jumlah')
-            .addEventListener('input', hitungTotal);
-
-        function hitungTotal() {
-
-            const idProduk =
-                document.getElementById('idProduk').value;
-
-            const jumlah =
-                parseInt(
-                    document.getElementById('jumlah').value
-                );
-
-            const product = products.find(
-                p => p.id == idProduk
-            );
-
-            if (!product || !jumlah) {
-
-                document.getElementById(
-                    'totalHarga'
-                ).value = '';
-
-                return;
-            }
-
-            const hargaJual =
-                parseFloat(product.harga_jual);
-
-            const totalHarga =
-                hargaJual * jumlah;
-
-            document.getElementById(
-                'totalHarga'
-            ).value =
-                'Rp ' + formatRupiah(totalHarga);
-        }
-
-        document
-            .getElementById('addDataBtn')
-            .addEventListener('click', function () {
-
-                document.getElementById(
-                    'formTitle'
-                ).textContent =
-                    'Tambah Transaksi Baru';
-
-                document.getElementById(
-                    'submitBtn'
-                ).textContent = 'Submit';
-
-                document.getElementById(
-                    'transactionForm'
-                ).reset();
-
-                document.getElementById(
-                    'hargaJual'
-                ).value = '';
-
-                document.getElementById(
-                    'totalHarga'
-                ).value = '';
-
-                document.getElementById(
-                    'formContainer'
-                ).style.display = 'block';
-            });
-
-        document
-            .getElementById('cancelBtn')
-            .addEventListener('click', function () {
-
-                document.getElementById(
-                    'formContainer'
-                ).style.display = 'none';
-            });
-
-        document
-            .getElementById('transactionForm')
-            .addEventListener('submit', async function (e) {
-
-                e.preventDefault();
-
-                const idProduk =
-                    document.getElementById(
-                        'idProduk'
-                    ).value;
-
-                const jumlah =
-                    document.getElementById(
-                        'jumlah'
-                    ).value;
-
-                if (!idProduk || !jumlah) {
-                    alert(
-                        'Produk dan jumlah harus diisi.'
-                    );
-
-                    return;
-                }
-
-                const transactionData = {
-                    id_produk: parseInt(idProduk),
-                    jumlah: parseInt(jumlah)
-                };
-
-                try {
-
-                    const response =
-                        await fetch(createUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type':
-                                    'application/json'
-                            },
-                            body:
-                                JSON.stringify(
-                                    transactionData
-                                )
-                        });
-
-                    if (!response.ok) {
-                        throw new Error(
-                            `HTTP error! status: ${response.status}`
-                        );
-                    }
-
-                    const result =
-                        await response.json();
-
-                    console.log(result);
-
-                    alert(
-                        'Transaksi berhasil ditambahkan!'
-                    );
-
-                    document.getElementById(
-                        'transactionForm'
-                    ).reset();
-
-                    document.getElementById(
-                        'hargaJual'
-                    ).value = '';
-
-                    document.getElementById(
-                        'totalHarga'
-                    ).value = '';
-
-                    document.getElementById(
-                        'formContainer'
-                    ).style.display = 'none';
-
-                    getTransactions();
-
-                } catch (error) {
-
-                    console.error(
-                        'Gagal menambahkan transaksi:',
-                        error
-                    );
-
-                    alert(
-                        'Gagal menambahkan transaksi.'
-                    );
-                }
-            });
-
-        async function updateTransaction(id) {
-
-            const yakin = confirm(
-                'Apakah transaksi ini ingin di-update?'
-            );
-
-            if (!yakin) {
-                return;
-            }
+            const transaksiData = {
+                "id_produk": parseInt(document.getElementById('idProduk').value),
+                "jumlah": parseInt(document.getElementById('jumlah').value)
+            };
 
             try {
-
-                const response =
-                    await fetch(updateUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type':
-                                'application/json'
-                        },
-                        body: JSON.stringify({
-                            id_transaksi: id
-                        })
-                    });
+                let response = await fetch(createUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(transaksiData)
+                });
 
                 if (!response.ok) {
-                    throw new Error(
-                        `HTTP error! status: ${response.status}`
-                    );
+                    const teks = await response.text();
+                    throw new Error(`Status ${response.status}: ${teks}`);
                 }
-
-                const result =
-                    await response.json();
-
-                console.log(result);
-
-                alert(
-                    'Status transaksi berhasil di-update.'
-                );
-
-                getTransactions();
-
+                alert('Transaksi berhasil ditambahkan!');
+                document.getElementById('formContainer').style.display = 'none';
+                getTransaksi(); // Refresh daftar transaksi
             } catch (error) {
+                console.error("Gagal menambahkan transaksi:", error);
+                alert('Gagal menambahkan transaksi: ' + error.message);
+            }
+        });
 
-                console.error(
-                    'Gagal update transaksi:',
-                    error
-                );
+        // ===== UPDATE (ubah status menjadi "Selesai") =====
+        async function updateTransaksi(id) {
+            if (!confirm('Ubah status transaksi ini menjadi Selesai?')) return;
 
-                alert(
-                    'Gagal update transaksi.'
-                );
+            try {
+                let response = await fetch(updateUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ "id_transaksi": id })
+                });
+
+                if (!response.ok) {
+                    const teks = await response.text();
+                    throw new Error(`Status ${response.status}: ${teks}`);
+                }
+                alert('Status transaksi berhasil diperbarui!');
+                getTransaksi(); // Refresh daftar transaksi
+            } catch (error) {
+                console.error("Gagal memperbarui transaksi:", error);
+                alert('Gagal memperbarui transaksi: ' + error.message);
             }
         }
 
-        getProducts();
-        getTransactions();
+        getTransaksi();
+        loadProdukOptions();
     </script>
-
 </body>
 
 </html>
