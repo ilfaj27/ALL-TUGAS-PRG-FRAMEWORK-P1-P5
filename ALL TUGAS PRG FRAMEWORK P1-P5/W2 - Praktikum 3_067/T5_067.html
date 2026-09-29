@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title></title>
+</head>
+<body>
+
+    <h1>Tombol Pengubah Warna Latar Belakang</h1>
+
+    <button onclick="ubahWarna()">Ubah Warna</button>
+
+    <script>
+        function ubahWarna() {
+            const warna = [
+                "red",
+                "blue",
+                "green",
+                "yellow",
+                "purple",
+                "orange",
+                "pink"
+            ];
+
+            const angkaAcak = Math.floor(Math.random() * warna.length);
+
+            document.body.style.backgroundColor = warna[angkaAcak];
+        }
+    </script>
+
+</body>
+</html>
